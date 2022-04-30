@@ -10,12 +10,16 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.formation.config.NotificationServiceConfig;
 import org.formation.domain.Livraison;
 import org.formation.domain.Livreur;
+import org.formation.domain.Review;
 import org.formation.domain.Status;
 import org.formation.interceptor.Logged;
+import org.formation.service.Courriel;
 import org.formation.service.LivraisonService;
+import org.formation.service.NotificationService;
 
 import io.smallrye.mutiny.Multi;
 
@@ -26,18 +30,30 @@ public class LivraisonServiceImpl implements LivraisonService {
 	@Inject
 	NotificationServiceConfig notificationServiceConfig;
 	
+    @RestClient 
+    NotificationService notificationService;
+    
+	
 	List<Livraison> livraisons;
 	
 	@ConfigProperty(name = "quarkus.http.port") 
 	String port;
-	
+		
 	@PostConstruct
 	public void init() {
 		livraisons = new ArrayList<>();
-		livraisons.add(Livraison.builder().id(1).noCommande("1").creationDate(Instant.now()).status(Status.DISTRIBUE).build());
-		livraisons.add(Livraison.builder().id(1).noCommande("2").creationDate(Instant.now()).status(Status.DISTRIBUE).build());
-		livraisons.add(Livraison.builder().id(1).noCommande("3").creationDate(Instant.now()).status(Status.DISTRIBUE).build());
-		livraisons.add(Livraison.builder().id(1).noCommande("4").creationDate(Instant.now()).status(Status.DISTRIBUE).build());		
+
+		List<Review> reviews = new ArrayList<>();
+		reviews.add(new Review(1,5,"GOOD"));
+		reviews.add(new Review(1,3,"BAD"));
+		
+		Livreur livreur = Livreur.builder().id(1).nom("Speedy Gonzales").telephone("O6-49-79-99-69").reviews(reviews).build();
+		livraisons.add(Livraison.builder().id(1).noCommande("1").creationDate(Instant.now()).status(Status.DISTRIBUE).livreur(livreur).build());
+		livraisons.add(Livraison.builder().id(1).noCommande("2").creationDate(Instant.now()).status(Status.DISTRIBUE).livreur(livreur).build());
+		livraisons.add(Livraison.builder().id(1).noCommande("3").creationDate(Instant.now()).status(Status.DISTRIBUE).livreur(livreur).build());
+		livraisons.add(Livraison.builder().id(1).noCommande("4").creationDate(Instant.now()).status(Status.DISTRIBUE).livreur(livreur).build());		
+	
+
 	}
 	@Override
 	public Multi<Livraison> findAll() {
@@ -55,6 +71,8 @@ public class LivraisonServiceImpl implements LivraisonService {
 	public Livraison create(String noCommande) {
 		Livraison livraison = Livraison.builder().id(livraisons.size()+1).noCommande(noCommande).creationDate(Instant.now()).status(Status.CREE).build();
 		livraisons.add(livraison);
+		notificationService.sendMail(Courriel.builder().to("david.thibau@gmail.com").subject("Création Livraison").text(livraison.toString()).build());
+
 		return livraison;
 	}
 
