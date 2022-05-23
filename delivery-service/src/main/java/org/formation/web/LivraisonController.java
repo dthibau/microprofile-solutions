@@ -1,5 +1,6 @@
 package org.formation.web;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -7,6 +8,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.formation.domain.Livraison;
@@ -22,13 +24,23 @@ import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
 
 @Path("/livraisons")
+@RolesAllowed("admin")
 public class LivraisonController {
 
 	@Inject
 	private LivraisonService livraisonService;
 	
+	@Inject
+    private JsonWebToken callerPrincipal;
+	
+	@GET
+	@Path("/token")
+	public JsonWebToken displayToken() {
+		return callerPrincipal;
+	}
     @GET
     @Logged
+    @RolesAllowed("user")
 	public Multi<BaseLivraisonDto> findAll() {
     	Log.debug("Message from Controller");
 		return livraisonService.findAll().map(l -> new BaseLivraisonDto(l));
@@ -36,6 +48,7 @@ public class LivraisonController {
 
     @GET
     @Path("{id}")
+    @RolesAllowed("user")
     public Livraison findOne(@RestPath Long id) {
     	return livraisonService.load(Livraison.builder().id(id).build()).orElseThrow(() -> new RuntimeException());
     }
