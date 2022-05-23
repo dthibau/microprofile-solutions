@@ -9,6 +9,7 @@ import javax.ws.rs.Path;
 
 import org.formation.domain.Livraison;
 import org.formation.domain.Livreur;
+import org.formation.dto.BaseLivraisonDto;
 import org.formation.interceptor.Logged;
 import org.formation.service.LivraisonService;
 import org.jboss.resteasy.reactive.ResponseStatus;
@@ -26,9 +27,9 @@ public class LivraisonController {
 	
     @GET
     @Logged
-	public Multi<Livraison> findAll() {
+	public Multi<BaseLivraisonDto> findAll() {
     	Log.debug("Message from Controller");
-		return livraisonService.findAll();
+		return livraisonService.findAll().map(l -> new BaseLivraisonDto(l));
 	}
 
     @GET
