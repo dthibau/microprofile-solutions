@@ -7,6 +7,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.formation.domain.Livraison;
 import org.formation.domain.Livreur;
 import org.formation.dto.BaseLivraisonDto;
@@ -41,6 +43,8 @@ public class LivraisonController {
 
     @POST
     @ResponseStatus(201)
+    @Counted(name = "nbLivraisons")
+    @Timed
     public Livraison create(@RestQuery String noCommande) {
     	return livraisonService.create(noCommande);
     }
